@@ -18,25 +18,32 @@
                 {% endif %}
                 {% endwith %}
                 <div class="text-center">
-                    <h2>Login</h2>
+                    <h2>Sign Up</h2>
                 </div>
                 
                 <div class="form-group mb-3">
                     {{ form.email(class_="form-control",placeholder="Email")}}
                 </div>
                 <div class="form-group mb-3">
+                    {{ form.full_name(class_="form-control",placeholder="Full Name")}}
+                </div>
+                <div class="form-group mb-3">
                     {{ form.password(class_="form-control",placeholder="Password")}}
                 </div>
             
+                <div class="form-group mb-3">
+                    {{ form.confirm_password(class_="form-control",placeholder="Confirm Password")}}
+                </div>
                 <div class="text-center">
                     <a>
-                        {{ form.submit(class_="btn btn-primary", value="Login") }}
+                        {{ form.submit(class_="btn btn-primary", value="Register now") }}
                     </a>
                     <a>
-                        <a href="{{url_for('register') }}">Sign up</a>
+                        <a href="{{url_for('login')}}">Login instead</a>
                     </a>
 
                 </div>
+                
             </form>
         </div>
     </div>

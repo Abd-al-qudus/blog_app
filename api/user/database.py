@@ -9,7 +9,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 import typing
 
-from models import (
+from .models import (
     User,
     Base
 )
@@ -18,7 +18,7 @@ class DATABASE:
     """the database"""
     
     def __init__(self) -> None:
-        self._engine = create_engine("", echo=True)
+        self._engine = create_engine("mysql+mysqldb://test:pass@localhost/blog_app", echo=True)
         Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
         self.__session = None
