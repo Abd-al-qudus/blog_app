@@ -1,6 +1,6 @@
 """
     this module handles database operations
-    """
+"""
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -8,6 +8,8 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 import typing
+import sqlite3
+
 
 from .models import (
     User,
@@ -18,7 +20,9 @@ class DATABASE:
     """the database"""
     
     def __init__(self) -> None:
-        self._engine = create_engine("mysql+mysqldb://test:pass@localhost/blog_app", echo=True)
+        self._engine = create_engine("sqlite:///my_database.db", echo=True)
+        # mysql://username:password@localhost:3306/database_name
+
         Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
         self.__session = None
