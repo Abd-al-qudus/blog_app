@@ -20,9 +20,7 @@ class DATABASE:
     """the database"""
     
     def __init__(self) -> None:
-        self._engine = create_engine("sqlite:///my_database.db", echo=True)
-        # mysql://username:password@localhost:3306/database_name
-
+        self._engine = create_engine("sqlite:///blog.db", echo=True)
         Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
         self.__session = None

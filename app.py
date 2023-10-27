@@ -26,11 +26,18 @@ from api.user.authentication import AUTH
 
 
 app = Flask(__name__)
+app.secret_key = "%70386728037#567289376bdf7wgsn"
+
 
 userDb = DATABASE()
 auth = AUTH()
 
-@app.route('/user/register', methods=['POST'])
+@app.route('/', methods=['POST','GET'])
+def Home():
+    return render_template('home.html')
+
+
+@app.route('/user/register', methods=['POST', 'GET'])
 def register_user():
     form = register_form()
     if form.validate_on_submit():
@@ -59,7 +66,7 @@ def register_user():
     
     return render_template('register.html', form=form)
 
-@app.route('/user/login', methods=['POST'])
+@app.route('/user/login', methods=['POST', 'GET'])
 def login():
     form = login_form()
     if form.validate_on_submit():
@@ -76,4 +83,4 @@ def login():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
