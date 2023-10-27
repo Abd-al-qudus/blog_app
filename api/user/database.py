@@ -8,20 +8,15 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 import typing
-import sqlite3
 
-
-from .models import (
-    User,
-    Base
-)
+from .models import Base, BlogPost, User
 
 class DATABASE:
     """the database"""
     
     def __init__(self) -> None:
         self._engine = create_engine("sqlite:///blog.db", echo=True)
-        Base.metadata.drop_all(self._engine)
+        # Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
         self.__session = None
     
@@ -29,7 +24,7 @@ class DATABASE:
     def _session(self) -> Session:
         """create a session for the database operation"""
         if self.__session is None:
-            DB_Session = sessionmaker(bind=self._engine)
+            DB_Session = sessionmaker(bind=self._engine, expire_on_commit=False)
             self.__session = DB_Session()
         return self.__session
     
@@ -71,3 +66,11 @@ class DATABASE:
         user = self.get_user(id=user_id)
         self._session.delete(user)
         self._session.commit()
+
+    def get_all_posts(self) -> BlogPost:
+        posts = self._session.query(BlogPost).all()
+        return posts
+    
+    def get_posts_by_id(self, post_id : int) -> BlogPost:
+        post = self._session.query(BlogPost).get(post_id)
+        return post

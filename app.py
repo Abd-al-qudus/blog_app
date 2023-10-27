@@ -20,7 +20,7 @@ from sqlalchemy.exc import (
     InvalidRequestError
 )
 from api.user.database import DATABASE
-from api.user.models import User, BlogPost
+from api.user.models import User
 from api.user.authentication import AUTH
 
 
@@ -34,14 +34,38 @@ auth = AUTH()
 
 @app.route('/', methods=['POST','GET'])
 def get_all_posts():
-    posts = []
+    posts = userDb.get_all_posts()
     return render_template('home.html', all_posts=posts)
 
 @app.route("/new-post", methods=['POST', 'GET'])
 def add_new_post():
     return render_template("New Post")
 
+@app.route("/post/<int:post_id>", methods=['POST', 'GET'])
+def show_post(post_id):
+    # requested_post = BlogPost.query.get(post_id)
+    # form = CommentForm()
+    # all_comment = Comment.query.filter_by(post_id=post_id).all()
+    # if form.validate_on_submit():
+    #     if not current_user.is_authenticated:
+    #         flash("You need to login or register to comment.")
+    #         return redirect(url_for("login"))
+        
+    #     comment = form.comment.data
+    #     new_comment = Comment(
+    #         text=comment,
+    #         comment_author=current_user,
+    #         parent_post=requested_post
+    #     )
+    #     db.session.add(new_comment)
+    #     db.session.commit()
+    # else:
+    #     flash('Error')
+    return render_template("post.html")
 
+@app.route("/delete/<int:post_id>")
+def delete_post(post_id):
+    return redirect(url_for('get_all_posts'))
 
 @app.route('/user/register', methods=['POST', 'GET'])
 def register_user():

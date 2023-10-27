@@ -20,6 +20,8 @@ class User(Base):
     email = Column(String(300), nullable=False, unique=True)
     password = Column(String(300), nullable=False)
     session_id = Column(String(300), nullable=False)
+    post = relationship("BlogPost", back_populates="author")
+    comments = relationship('Comment', back_populates='comment_author')
 
 
 class BlogPost(Base):
