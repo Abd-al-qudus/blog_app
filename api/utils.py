@@ -6,7 +6,7 @@ import bcrypt
 import uuid
 
 
-def generate_password_hash(self, password: str) -> bytes:
+def generate_password_hash(password: str) -> bytes:
     """generate the password has using bcrypt and """
     hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     return hash

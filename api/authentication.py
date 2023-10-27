@@ -43,24 +43,31 @@ class AUTH:
         try:
             user = self._database.get_user(email=email)
             if user is not None:
+                print(bcrypt.checkpw(
+                    password.encode('utf-8'),
+                    user.password
+                ))
                 return bcrypt.checkpw(
                     password.encode('utf-8'),
                     user.password
                 )
+            return False
         except NoResultFound:
             return False
     
     def login(self, email: str, password: str) -> str:
         """log the user in and create session token"""
-        self.validate_login(email, password)
-        session_id = generate_id()
-        try:
-            user = self._database.get_user(email=email)
-            self._database.update_user(user.id, session_id=session_id)
-        except [NoResultFound, ValueError, InvalidRequestError]:
-            raise ValueError('User does not exist')
-        finally:
-            return self._database.get_user(id=user.id).session_id          
+        if self.validate_login(email, password):
+            session_id = generate_id()
+            try:
+                user = self._database.get_user(email=email)
+                self._database.update_user(user.id, session_id=session_id)
+            except Exception:
+                raise ValueError('User does not exist')
+            finally:
+                return session_id  
+        else:
+            raise ValueError("Invalid login credentials")        
 
     def logout(self, user_id: int) -> None:
         """log out and delete the session"""

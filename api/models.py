@@ -19,7 +19,7 @@ class User(Base):
     full_name = Column(String(300), nullable=False)
     email = Column(String(300), nullable=False, unique=True)
     password = Column(String(300), nullable=False)
-    session_id = Column(String(300), nullable=False)
+    session_id = Column(String(300), nullable=True)
     post = relationship("BlogPost", back_populates="author")
     comments = relationship('Comment', back_populates='comment_author')
 
