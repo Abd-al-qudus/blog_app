@@ -20,7 +20,7 @@ from sqlalchemy.exc import (
     InvalidRequestError
 )
 from api.user.database import DATABASE
-from api.user.models import User
+from api.user.models import User, BlogPost
 from api.user.authentication import AUTH
 
 
@@ -33,8 +33,14 @@ userDb = DATABASE()
 auth = AUTH()
 
 @app.route('/', methods=['POST','GET'])
-def Home():
-    return render_template('home.html')
+def get_all_posts():
+    posts = []
+    return render_template('home.html', all_posts=posts)
+
+@app.route("/new-post", methods=['POST', 'GET'])
+def add_new_post():
+    return render_template("New Post")
+
 
 
 @app.route('/user/register', methods=['POST', 'GET'])
@@ -81,6 +87,9 @@ def login():
          
     return render_template('login.html', form=form)
 
+@app.route('/logout')
+def logout():
+    return redirect(url_for('get_all_posts'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
