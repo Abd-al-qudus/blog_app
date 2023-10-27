@@ -50,27 +50,28 @@ def register_user():
         email = form.email.data
         password = form.password.data
         full_name = form.full_name.data
-    try:
-        new_user = auth.register(email=email, password=password, full_name=full_name)
-        flash(f"Account succesfully created", "success")
-        return redirect(url_for('login'))
-    except InvalidRequestError:
-        userDb._session.rollback()
-        flash(f"Something went wrong!", "danger")
-    except IntegrityError:
-        userDb._session.rollback()
-        flash(f"User already exists!.", "warning")
-    except DataError:
-        userDb._session.rollback()
-        flash(f"Invalid Entry", "warning")
-    except InterfaceError:
-        userDb._session.rollback()
-        flash(f"Error connecting to the database", "danger")
-    except DatabaseError:
-        userDb._session.rollback()
-        flash(f"Error connecting to the database", "danger")
-    
+        try:
+            new_user = auth.register(email=email, password=password, full_name=full_name)
+            flash(f"Account succesfully created", "success")
+            return redirect(url_for('login'))
+        except InvalidRequestError:
+            userDb._session.rollback()
+            flash(f"Something went wrong!", "danger")
+        except IntegrityError:
+            userDb._session.rollback()
+            flash(f"User already exists!.", "warning")
+        except DataError:
+            userDb._session.rollback()
+            flash(f"Invalid Entry", "warning")
+        except InterfaceError:
+            userDb._session.rollback()
+            flash(f"Error connecting to the database", "danger")
+        except DatabaseError:
+            userDb._session.rollback()
+            flash(f"Error connecting to the database", "danger")
+
     return render_template('register.html', form=form)
+
 
 @app.route('/user/login', methods=['POST', 'GET'])
 def login():
@@ -87,9 +88,11 @@ def login():
          
     return render_template('login.html', form=form)
 
+
 @app.route('/logout')
 def logout():
     return redirect(url_for('get_all_posts'))
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
