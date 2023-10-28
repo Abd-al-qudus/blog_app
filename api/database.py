@@ -28,11 +28,14 @@ class DATABASE:
             self.__session = DB_Session()
         return self.__session
     
-    def create_user_with_email(self, email: str, password: str) -> User:
+    def create_user_with_email(self, email: str, password: str, full_name: str) -> User:
         """create the user with email and password and return the user"""
-        new_user = User(email=email, password=password)
-        self._session.add(new_user)
-        self._session.commit()
+        new_user = User(full_name=full_name, email=email, password=password)
+        try:
+            self._session.add(new_user)
+            self._session.commit()
+        except Exception:
+            self._session.rollback()
         return new_user
     
     def get_user(self, **kwargs) -> User:
@@ -56,21 +59,28 @@ class DATABASE:
         for key in kwargs.keys():
             if key not in user_columns:
                 raise ValueError(f"missing key {key}")
-        user = self.get_user(id=user_id)
-        for k, v in kwargs.items():
-            setattr(user, k, v)
-        self._session.commit()
+        try:
+            user = self.get_user(id=user_id)
+            for k, v in kwargs.items():
+                setattr(user, k, v)
+            self._session.commit()
+        except Exception:
+            self._session.rollback()
         
     def delete_user(self, user_id: int) -> None:
         """delete the user"""
-        user = self.get_user(id=user_id)
-        self._session.delete(user)
-        self._session.commit()
+        try:
+            user = self.get_user(id=user_id)
+            self._session.delete(user)
+            self._session.commit()
+        except Exception:
+            self._session.rollback()
 
     def get_all_posts(self) -> BlogPost:
         posts = self._session.query(BlogPost).all()
         return posts
     
+<<<<<<< HEAD:api/user/database.py
     def get_posts_by_id(self, id: int) -> BlogPost:
         try:
             post = self._session.query(BlogPost).filter_by(id=id).first()
@@ -97,3 +107,8 @@ class DATABASE:
         self._session.commit()
         return new_comment
       
+=======
+    def get_posts_by_id(self, post_id : int) -> BlogPost:
+        post = self._session.query(BlogPost).get(post_id)
+        return post
+>>>>>>> a612a3d4ca1d95f4f1390bc1e16756f196ed2053:api/database.py
