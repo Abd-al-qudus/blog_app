@@ -11,7 +11,7 @@ from api.forms import (
     register_form,
     CommentForm
 )
-from api.database import DATABASE
+from api.posts import POSTS
 from api.authentication import AUTH
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
@@ -36,22 +36,23 @@ CKEditor(app)
 #                     base_url=None)
 
 
-userDb = DATABASE()
+post_handler = POSTS()
 auth = AUTH()
 
-
+#post routes
 @app.route("/new-post", methods=['POST', 'GET'])
 def add_new_post():
     return render_template("new-post.html", is_edit=False)
 
+
 @app.route("/post/<int:post_id>", methods=['POST', 'GET'])
 def show_post(post_id):
-    request_post = userDb.get_posts_by_id(post_id)
-    comments = userDb.get_all_comments(post_id)
+    request_post = post_handler.get_posts_by_id(post_id)
+    comments = post_handler.get_all_comments(post_id)
     form = CommentForm()
     if form.validate_on_submit():
         comment = form.comment.data
-        newcomment = userDb.add_newComments(text=comment, comment_author='userName', parent_post=request_post)
+        newcomment = post_handler.add_newComments(text=comment, comment_author='userName', parent_post=request_post)
         if(newcomment):
             flash('Success')
         else:
@@ -60,27 +61,23 @@ def show_post(post_id):
         flash('Error')
     return render_template("post.html", post=request_post, all_comment=comments, form=form)
 
+
 @app.route("/delete/<int:post_id>")
 def delete_post(post_id):
     return redirect(url_for('get_all_posts'))
 
+
 @app.route("/edit-post/<int:post_id>")
 def edit_post(post_id):
-    post = userDb.get_posts_by_id(post_id)
+    post = post_handler.get_posts_by_id(post_id)
     return render_template("make-post.html")
 
-
-# @app.route('/', methods=['POST','GET'])
-# def get_all_posts():
-#     posts = userDb.get_all_posts()
-#     return render_template('home.html', all_posts=posts)
-
-
+#user routes
 @app.route('/', methods=['GET', 'POST'])
 def home():
     print(session.get('session_id'))
     if session.get('session_id'):
-        posts = userDb.get_all_posts()
+        posts = post_handler.get_all_posts()
         return render_template('home.html', all_posts=posts)
     else:
         return redirect(url_for('login'))
