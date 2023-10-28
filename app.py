@@ -20,7 +20,6 @@ from sqlalchemy.exc import (
     InvalidRequestError
 )
 from api.database import DATABASE
-from api.models import User
 from api.authentication import AUTH
 
 
@@ -90,7 +89,7 @@ def register_user():
             flash(f"Account succesfully created", "success")
             return redirect(url_for('login'))
         except Exception as e:
-            userDb._session.rollback()
+            auth.session_manager().rollback()
             flash(f"{e}", "warning")
         
     return render_template('register.html', form=form)
@@ -103,10 +102,11 @@ def login():
         email = form.email.data
         password = form.password.data
         try:
-            auth.login(email=email, password=password)
+            session_id = auth.login(email=email, password=password)
+            print(session_id)
             return redirect(url_for('home'))
         except Exception as e:
-            userDb._session.rollback()
+            auth.session_manager().rollback()
             flash(f"{e}", "warning")
          
     return render_template('login.html', form=form)

@@ -30,12 +30,13 @@ class DATABASE:
     
     def create_user_with_email(self, email: str, password: str, full_name: str) -> User:
         """create the user with email and password and return the user"""
-        new_user = User(full_name=full_name, email=email, password=password)
+        new_user = User(full_name=full_name, email=email, password=password, session_id=None)
         try:
             self._session.add(new_user)
             self._session.commit()
-        except Exception:
+        except Exception as e:
             self._session.rollback()
+            raise e
         return new_user
     
     def get_user(self, **kwargs) -> User:
@@ -64,8 +65,9 @@ class DATABASE:
             for k, v in kwargs.items():
                 setattr(user, k, v)
             self._session.commit()
-        except Exception:
+        except Exception as e:
             self._session.rollback()
+            raise e
         
     def delete_user(self, user_id: int) -> None:
         """delete the user"""
@@ -73,8 +75,9 @@ class DATABASE:
             user = self.get_user(id=user_id)
             self._session.delete(user)
             self._session.commit()
-        except Exception:
+        except Exception as e:
             self._session.rollback()
+            raise e
 
     def get_all_posts(self) -> BlogPost:
         posts = self._session.query(BlogPost).all()

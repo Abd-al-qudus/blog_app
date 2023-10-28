@@ -9,7 +9,7 @@ from api.utils import (
 from .database import DATABASE
 from .models import User
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy.orm.session import Session
 import bcrypt
 
 
@@ -21,7 +21,7 @@ class AUTH:
     
     def register(self, email: str, password: str, full_name: str) -> User:
         """create a new user"""
-        if not isinstance(email, str) or not isinstance(password, str) or not isinstance(full_name, str):
+        if not all(isinstance(value, str) for value in (email, password, full_name)):
             raise ValueError("email/password/full name must be a string")
         try:
             existing_user = self._database.get_user(email=email)
@@ -37,21 +37,12 @@ class AUTH:
             return new_user
     
     def validate_login(self, email: str, password: str) -> bool:
-        """validate the user login credentials"""
-        if not isinstance(email, str) or not isinstance(password, str):
+        """Validate the user login credentials"""
+        if not all(isinstance(value, str) for value in (email, password)):
             raise ValueError("email/password must be a string")
         try:
             user = self._database.get_user(email=email)
-            if user is not None:
-                print(bcrypt.checkpw(
-                    password.encode('utf-8'),
-                    user.password
-                ))
-                return bcrypt.checkpw(
-                    password.encode('utf-8'),
-                    user.password
-                )
-            return False
+            return bcrypt.checkpw(password.encode('utf-8'), user.password)
         except NoResultFound:
             return False
     
@@ -59,13 +50,9 @@ class AUTH:
         """log the user in and create session token"""
         if self.validate_login(email, password):
             session_id = generate_id()
-            try:
-                user = self._database.get_user(email=email)
-                self._database.update_user(user.id, session_id=session_id)
-            except Exception:
-                raise ValueError('User does not exist')
-            finally:
-                return session_id  
+            user = self._database.get_user(email=email)
+            self._database.update_user(user.id, session_id=session_id)
+            return session_id  
         else:
             raise ValueError("Invalid login credentials")        
 
@@ -74,3 +61,7 @@ class AUTH:
         if not isinstance(user_id, int):
             raise ValueError('user id must be integer')
         self._database.update_user(user_id, session_id=None)
+        
+    def session_manager(self) -> Session:
+        """manage the auth session"""
+        return self._database._session
