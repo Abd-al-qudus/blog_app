@@ -20,11 +20,12 @@ from sqlalchemy.exc import (
     InterfaceError,
     InvalidRequestError
 )
-from api.user.database import DATABASE
-from api.user.models import User
-from api.user.authentication import AUTH
+from api.database import DATABASE
+from api.models import User
+from api.authentication import AUTH
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
+# from flask_gravatar import Gravatar
 
 
 app = Flask(__name__)
@@ -35,13 +36,23 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 Bootstrap(app)
 CKEditor(app)
 
+# gravatar = Gravatar(app,
+#                     size=100,
+#                     rating='g',
+#                     default='retro',
+#                     force_default=False,
+#                     force_lower=False,
+#                     use_ssl=False,
+#                     base_url=None)
+
+
 userDb = DATABASE()
 auth = AUTH()
 
 
 @app.route("/new-post", methods=['POST', 'GET'])
 def add_new_post():
-    return render_template("New Post")
+    return render_template("new-post.html", is_edit=False)
 
 @app.route("/post/<int:post_id>", methods=['POST', 'GET'])
 def show_post(post_id):
@@ -110,6 +121,11 @@ def login():
             flash(f"{e}", "warning")
          
     return render_template('login.html', form=form)
+
+@app.route("/edit-post/<int:post_id>")
+def edit_post(post_id):
+    post = userDb.get_posts_by_id(post_id)
+    return render_template("make-post.html")
 
 
 @app.route('/logout')

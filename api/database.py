@@ -80,7 +80,6 @@ class DATABASE:
         posts = self._session.query(BlogPost).all()
         return posts
     
-<<<<<<< HEAD:api/user/database.py
     def get_posts_by_id(self, id: int) -> BlogPost:
         try:
             post = self._session.query(BlogPost).filter_by(id=id).first()
@@ -107,8 +106,3 @@ class DATABASE:
         self._session.commit()
         return new_comment
       
-=======
-    def get_posts_by_id(self, post_id : int) -> BlogPost:
-        post = self._session.query(BlogPost).get(post_id)
-        return post
->>>>>>> a612a3d4ca1d95f4f1390bc1e16756f196ed2053:api/database.py
