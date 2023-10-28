@@ -10,7 +10,8 @@ from flask import (
 )
 from api.forms import (
     login_form,
-    register_form
+    register_form,
+    CommentForm
 )
 from sqlalchemy.exc import (
     IntegrityError,
@@ -22,12 +23,17 @@ from sqlalchemy.exc import (
 from api.user.database import DATABASE
 from api.user.models import User
 from api.user.authentication import AUTH
-
+from flask_bootstrap import Bootstrap
+from flask_ckeditor import CKEditor
 
 
 app = Flask(__name__)
-app.secret_key = "%70386728037#567289376bdf7wgsn"
 
+app.secret_key = "%70386728037#567289376bdf7wgsn"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+Bootstrap(app)
+CKEditor(app)
 
 userDb = DATABASE()
 auth = AUTH()
@@ -43,25 +49,19 @@ def add_new_post():
 
 @app.route("/post/<int:post_id>", methods=['POST', 'GET'])
 def show_post(post_id):
-    # requested_post = BlogPost.query.get(post_id)
-    # form = CommentForm()
-    # all_comment = Comment.query.filter_by(post_id=post_id).all()
-    # if form.validate_on_submit():
-    #     if not current_user.is_authenticated:
-    #         flash("You need to login or register to comment.")
-    #         return redirect(url_for("login"))
-        
-    #     comment = form.comment.data
-    #     new_comment = Comment(
-    #         text=comment,
-    #         comment_author=current_user,
-    #         parent_post=requested_post
-    #     )
-    #     db.session.add(new_comment)
-    #     db.session.commit()
-    # else:
-    #     flash('Error')
-    return render_template("post.html")
+    request_post = userDb.get_posts_by_id(post_id)
+    comments = userDb.get_all_comments(post_id)
+    form = CommentForm()
+    if form.validate_on_submit():
+        comment = form.comment.data
+        newcomment = userDb.add_newComments(text=comment, comment_author='userName', parent_post=request_post)
+        if(newcomment):
+            flash('Success')
+        else:
+            flash('Error')
+    else:
+        flash('Error')
+    return render_template("post.html", post=request_post, all_comment=comments, form=form)
 
 @app.route("/delete/<int:post_id>")
 def delete_post(post_id):
