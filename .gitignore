@@ -1,1 +1,4 @@
-blog_app_env/
+blog_env/
+__pycache__/
+api/user/__pycache__/
+api/__pycache__/

@@ -1,27 +1,17 @@
 from flask import (
     Flask,
-    request,
-    jsonify,
-    abort,
     flash,
     redirect,
     url_for,
-    render_template
+    render_template,
+    session
 )
 from api.forms import (
     login_form,
     register_form,
     CommentForm
 )
-from sqlalchemy.exc import (
-    IntegrityError,
-    DataError,
-    DatabaseError,
-    InterfaceError,
-    InvalidRequestError
-)
-from api.database import DATABASE
-from api.models import User
+from api.posts import POSTS
 from api.authentication import AUTH
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
@@ -46,22 +36,23 @@ CKEditor(app)
 #                     base_url=None)
 
 
-userDb = DATABASE()
+post_handler = POSTS()
 auth = AUTH()
 
-
+#post routes
 @app.route("/new-post", methods=['POST', 'GET'])
 def add_new_post():
     return render_template("new-post.html", is_edit=False)
 
+
 @app.route("/post/<int:post_id>", methods=['POST', 'GET'])
 def show_post(post_id):
-    request_post = userDb.get_posts_by_id(post_id)
-    comments = userDb.get_all_comments(post_id)
+    request_post = post_handler.get_posts_by_id(post_id)
+    comments = post_handler.get_all_comments(post_id)
     form = CommentForm()
     if form.validate_on_submit():
         comment = form.comment.data
-        newcomment = userDb.add_newComments(text=comment, comment_author='userName', parent_post=request_post)
+        newcomment = post_handler.add_newComments(text=comment, comment_author='userName', parent_post=request_post)
         if(newcomment):
             flash('Success')
         else:
@@ -70,38 +61,41 @@ def show_post(post_id):
         flash('Error')
     return render_template("post.html", post=request_post, all_comment=comments, form=form)
 
+
 @app.route("/delete/<int:post_id>")
 def delete_post(post_id):
     return redirect(url_for('get_all_posts'))
 
-@app.route('/', methods=['POST','GET'])
-def get_all_posts():
-    posts = userDb.get_all_posts()
-    return render_template('home.html', all_posts=posts)
 
+@app.route("/edit-post/<int:post_id>")
+def edit_post(post_id):
+    post = post_handler.get_posts_by_id(post_id)
+    return render_template("make-post.html")
 
-@app.route('/home', methods=['GET'])
+#user routes
+@app.route('/', methods=['GET', 'POST'])
 def home():
-    posts = userDb.get_all_posts()
-    return render_template('home.html', all_posts=posts)
-
+    print(session.get('session_id'))
+    if session.get('session_id'):
+        posts = post_handler.get_all_posts()
+        return render_template('home.html', all_posts=posts)
+    else:
+        return redirect(url_for('login'))
+        
 
 @app.route('/user/register', methods=['POST', 'GET'])
-def register_user():
+def register():
     form = register_form()
     if form.validate_on_submit():
         email = form.email.data
         password = form.password.data
         full_name = form.full_name.data
-        print(f"{email} -- {password} -- {full_name}")
         try:
-            with userDb._session.begin():
-                new_user = auth.register(email=email, password=password, full_name=full_name)
-                print(new_user.email)
+            auth.register(email=email, password=password, full_name=full_name)
             flash(f"Account succesfully created", "success")
             return redirect(url_for('login'))
         except Exception as e:
-            userDb._session.rollback()
+            auth.session_manager().rollback()
             flash(f"{e}", "warning")
         
     return render_template('register.html', form=form)
@@ -114,23 +108,23 @@ def login():
         email = form.email.data
         password = form.password.data
         try:
-            auth.login(email=email, password=password)
+            session_id = auth.login(email=email, password=password)
+            session['session_id'] = session_id
             return redirect(url_for('home'))
         except Exception as e:
-            userDb._session.rollback()
+            auth.session_manager().rollback()
             flash(f"{e}", "warning")
          
     return render_template('login.html', form=form)
 
-@app.route("/edit-post/<int:post_id>")
-def edit_post(post_id):
-    post = userDb.get_posts_by_id(post_id)
-    return render_template("make-post.html")
-
 
 @app.route('/logout')
 def logout():
-    return redirect(url_for('get_all_posts'))
+    print('before logout', session.get('session_id'))
+    if 'session_id' in session:
+        session['session_id'] = None
+    print('after logout', session.get('session_id'))
+    return redirect(url_for('home'))
 
 
 if __name__ == '__main__':

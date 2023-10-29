@@ -30,12 +30,13 @@ class DATABASE:
     
     def create_user_with_email(self, email: str, password: str, full_name: str) -> User:
         """create the user with email and password and return the user"""
-        new_user = User(full_name=full_name, email=email, password=password)
+        new_user = User(full_name=full_name, email=email, password=password, session_id=None)
         try:
             self._session.add(new_user)
             self._session.commit()
-        except Exception:
+        except Exception as e:
             self._session.rollback()
+            raise e
         return new_user
     
     def get_user(self, **kwargs) -> User:
@@ -64,8 +65,9 @@ class DATABASE:
             for k, v in kwargs.items():
                 setattr(user, k, v)
             self._session.commit()
-        except Exception:
+        except Exception as e:
             self._session.rollback()
+            raise e
         
     def delete_user(self, user_id: int) -> None:
         """delete the user"""
@@ -73,36 +75,6 @@ class DATABASE:
             user = self.get_user(id=user_id)
             self._session.delete(user)
             self._session.commit()
-        except Exception:
-            self._session.rollback()
-
-    def get_all_posts(self) -> BlogPost:
-        posts = self._session.query(BlogPost).all()
-        return posts
-    
-    def get_posts_by_id(self, id: int) -> BlogPost:
-        try:
-            post = self._session.query(BlogPost).filter_by(id=id).first()
-            return post
         except Exception as e:
-            print(f"Error in get_posts_by_id: {str(e)}")
-            return None
-    
-    def delete_postById(self, id: int)-> bool:
-        post_to_delete = self.__session.query(BlogPost).get(id)
-        try:
-            self.__session.delete(post_to_delete)
-            self.__session.commit()
-            return True
-        except:
-            return False
-        
-    def get_all_comments(self, post_id: int) -> Comment:
-        return self._session.query(Comment).filter_by(post_id=post_id).all()
-    
-    def add_newComments(self, text:str, comment_author:str, parent_post: int ) -> Comment:
-        new_comment = Comment()
-        self._session.add(new_comment)
-        self._session.commit()
-        return new_comment
-      
+            self._session.rollback()
+            raise e
