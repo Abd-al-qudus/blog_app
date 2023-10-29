@@ -3,8 +3,8 @@
     """
 
 from .database import DATABASE
-from .models import BlogPost, Comment
-
+from .models import BlogPost, Comment, User
+from sqlalchemy.exc import IntegrityError
 
 class POSTS:
     """handle user posts"""
@@ -26,12 +26,12 @@ class POSTS:
             print(f"Error in get_posts_by_id: {str(e)}")
             return None
     
-    def delete_postById(self, id: int)-> bool:
+    def delete_postById(self, post_id: int)-> bool:
         """delete post by id"""
-        post_to_delete = self.__session.query(BlogPost).get(id)
+        post_to_delete = self.get_posts_by_id(id=post_id)
         try:
-            self.__session.delete(post_to_delete)
-            self.__session.commit()
+            self._session.delete(post_to_delete)
+            self._session.commit()
             return True
         except:
             return False
@@ -40,9 +40,33 @@ class POSTS:
         """get comments on post"""
         return self._session.query(Comment).filter_by(post_id=post_id).all()
     
+    def add_newPost(self, title: str, subtitle: str, body: str, img_url: str, author: str, date: str) -> BlogPost:
+        """Add a new post"""
+        auth = self._session.query(User).filter_by(full_name=author).first()
+        newPost = BlogPost(title=title, 
+                           subtitle=subtitle, body=body, 
+                           img_url=img_url, 
+                           author=auth, 
+                           date=date)
+        try:
+            self._session.add(newPost)
+            self._session.commit()
+        except IntegrityError:
+            self._session.rollback()
+        return newPost
+    
     def add_newComments(self, text:str, comment_author:str, parent_post: int ) -> Comment:
         """add new comment on a post"""
-        new_comment = Comment()
-        self._session.add(new_comment)
-        self._session.commit()
+        auth = self._session.query(User).filter_by(email=comment_author).first()
+        new_comment = Comment(text=text, comment_author=auth, parent_post=parent_post)
+        try:
+            self._session.add(new_comment)
+            self._session.commit()
+        except IntegrityError as e:
+            self._session.rollback()
+            raise e
         return new_comment
+    
+    def edit_post(self):
+        self._session.commit()
+        return True
