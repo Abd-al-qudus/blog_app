@@ -29,7 +29,7 @@
             <h1>{{post.title}}</h1>
             <h2 class="subheading">{{post.subtitle}}</h2>
             <span class="meta">Posted by
-              <a href="#">{{post.author.name}}</a>
+              <a href="#">{{post.author.full_name}}</a>
               on {{post.date}}</span>
           </div>
         </div>
@@ -65,7 +65,7 @@
                 {% for comment in all_comment%}
                 <li>
                     <div class="commenterImage">
-                      <img src="{{ comment.comment_author.name }}"/>
+                      <img src="{{ comment.comment_author.full_name }}"/>
                     </div>
                     <div class="commentText">
                       <p>{{comment.text | safe}}</p>
