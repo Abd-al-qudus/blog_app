@@ -9,7 +9,8 @@ from flask import (
 from api.forms import (
     login_form,
     register_form,
-    CommentForm
+    CommentForm,
+    CreatePostForm
 )
 from api.posts import POSTS
 from api.authentication import AUTH
@@ -42,7 +43,18 @@ auth = AUTH()
 #post routes
 @app.route("/new-post", methods=['POST', 'GET'])
 def add_new_post():
-    return render_template("new-post.html", is_edit=False)
+    if session.get('session_id'):
+        form = CreatePostForm()
+        if form.validate_on_submit():
+            title = form.title.data,
+            subtitle = form.subtitle.data,
+            body = form.body.data,
+            img_url = form.img_url.data,
+            print('[test**]', title, subtitle, body, img_url)
+            return redirect(url_for('home'))
+        return render_template("new-post.html", form=form)
+    else:
+        return redirect(url_for('login'))
 
 
 @app.route("/post/<int:post_id>", methods=['POST', 'GET'])
@@ -75,7 +87,6 @@ def edit_post(post_id):
 #user routes
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    print(session.get('session_id'))
     if session.get('session_id'):
         posts = post_handler.get_all_posts()
         return render_template('home.html', all_posts=posts)
