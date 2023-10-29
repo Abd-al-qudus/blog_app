@@ -58,7 +58,9 @@ class POSTS:
     def add_newComments(self, text:str, comment_author:str, parent_post: int ) -> Comment:
         """add new comment on a post"""
         auth = self._session.query(User).filter_by(email=comment_author).first()
-        new_comment = Comment(text=text, comment_author=auth, parent_post=parent_post)
+        print(auth)
+        print(auth.id)
+        new_comment = Comment(text=text, comment_author=auth, parent_post=parent_post, author_id=auth.id)
         try:
             self._session.add(new_comment)
             self._session.commit()

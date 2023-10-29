@@ -65,3 +65,9 @@ class AUTH:
     def session_manager(self) -> Session:
         """manage the auth session"""
         return self._database._session
+
+    def get_auth_session_user(self, **kwargs) -> User:
+        """get the user using auth sessions"""
+        if not kwargs:
+            raise ValueError('Search keywords must not be empty')
+        return self._database.get_user(**kwargs)
