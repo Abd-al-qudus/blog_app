@@ -9,12 +9,15 @@ from flask import (
 from api.forms import (
     login_form,
     register_form,
-    CommentForm
+    CommentForm,
+    CreatePostForm
 )
+from api.database import DATABASE
 from api.posts import POSTS
 from api.authentication import AUTH
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
+from datetime import date
 # from flask_gravatar import Gravatar
 
 
@@ -25,6 +28,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 Bootstrap(app)
 CKEditor(app)
+
 
 # gravatar = Gravatar(app,
 #                     size=100,
@@ -38,44 +42,80 @@ CKEditor(app)
 
 post_handler = POSTS()
 auth = AUTH()
+database = DATABASE()
+
+
 
 #post routes
 @app.route("/new-post", methods=['POST', 'GET'])
 def add_new_post():
-    return render_template("new-post.html", is_edit=False)
+    form = CreatePostForm()
+    user = database.get_user(session_id=session.get('session_id'))
+    if form.validate_on_submit():
+        newpost = post_handler.add_newPost(
+            title=form.title.data,
+            subtitle=form.subtitle.data,
+            body=form.body.data,
+            img_url=form.img_url.data,
+            author= user.full_name,
+            date= date.today().strftime("%B %d, %Y")
+        )
+        if newpost:
+            return redirect(url_for("home"))
+        else:
+            flash('Error while creating post')
+    return render_template("new-post.html", is_edit=False, form=form)
 
 
 @app.route("/post/<int:post_id>", methods=['POST', 'GET'])
 def show_post(post_id):
+    user = database.get_user(session_id=session.get('session_id'))
     request_post = post_handler.get_posts_by_id(post_id)
     comments = post_handler.get_all_comments(post_id)
     form = CommentForm()
     if form.validate_on_submit():
         comment = form.comment.data
-        newcomment = post_handler.add_newComments(text=comment, comment_author='userName', parent_post=request_post)
+        newcomment = post_handler.add_newComments(text=comment, comment_author=user.full_name, parent_post=request_post)
         if(newcomment):
             flash('Success')
         else:
             flash('Error')
-    else:
-        flash('Error')
     return render_template("post.html", post=request_post, all_comment=comments, form=form)
 
 
 @app.route("/delete/<int:post_id>")
 def delete_post(post_id):
-    return redirect(url_for('get_all_posts'))
+    post = post_handler.delete_postById(post_id)
+    if(post):
+        flash('Deleted successfully')
+    else:
+        flash('Error occur')
+
+    return redirect(url_for('home'))
 
 
-@app.route("/edit-post/<int:post_id>")
+@app.route("/edit-post/<int:post_id>", methods=['POST', 'GET'])
 def edit_post(post_id):
+    user = database.get_user(session_id=session.get('session_id'))
     post = post_handler.get_posts_by_id(post_id)
-    return render_template("make-post.html")
+    edit_form = CreatePostForm(
+        title=post.title,
+        subtitle=post.subtitle,
+        img_url=post.img_url,
+        body=post.body
+    )
+    if edit_form.validate_on_submit():
+        post.title = edit_form.title.data
+        post.subtitle = edit_form.subtitle.data
+        post.img_url = edit_form.img_url.data
+        post.body = edit_form.body.data
+        post_handler.edit_post()
+        return redirect(url_for("show_post", post_id=post.id))
+    return render_template("new-post.html", is_edit=True, form=edit_form)
 
 #user routes
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    print(session.get('session_id'))
     if session.get('session_id'):
         posts = post_handler.get_all_posts()
         return render_template('home.html', all_posts=posts)
